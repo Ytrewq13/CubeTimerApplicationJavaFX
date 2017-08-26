@@ -8,6 +8,12 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
+import javafx.scene.paint.*;
+import javafx.scene.shape.*;
+import javafx.scene.transform.*;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.stage.Stage;
 import javafx.animation.*;
 import java.util.ArrayList;
@@ -21,7 +27,7 @@ public class TimerFX extends Application {
 	public static boolean debug = false; // For debugging.
 	
 	// Cube.
-	private static Cube cube;
+	private static RubiksCube cube;
 
 	// Window dimensions.
 	private static int width = 400;
@@ -32,6 +38,12 @@ public class TimerFX extends Application {
 	private static Label averageTime;
 	private static Label listTimes;
 	private static Label scramble;
+	
+	// 3D window components/nodes.
+	private static Camera camera;
+	
+	// 3D material.
+	private static final PhongMaterial redMaterial = new PhongMaterial(Color.RED);
 	
 	// Scramble.
 	private static String scrambleString;
@@ -49,7 +61,7 @@ public class TimerFX extends Application {
 	private static BorderPane timeListFormattingBox;
 	private static BorderPane scrambleFormattingBox;
 
-	// Timelines.
+	// Timers.
 	private static AnimationTimer inspectionTimer;
 	private static AnimationTimer timer;
 
@@ -75,7 +87,7 @@ public class TimerFX extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		// Create the cube.
-		cube = new Cube();
+		cube = new RubiksCube();
 		
 		BorderPane root = new BorderPane();
 		
@@ -107,8 +119,44 @@ public class TimerFX extends Application {
 		root.setTop(scrambleFormattingBox);
 		root.setRight(timeListFormattingBox);
 		root.setLeft(timeStatsFormattingBox);
+		
+		// Master layout.
+		BorderPane masterRoot = new BorderPane();
+		masterRoot.setLeft(root);
 
-		primaryStage.setScene(new Scene(root, width, height));
+		Scene primaryScene = new Scene(masterRoot, width*2, height);
+		
+		// 3D cube shape.
+		Box cubeRender = new Box(5, 5, 5);
+		cubeRender.setMaterial(redMaterial);
+		cubeRender.getTransforms().addAll(
+				new Rotate(45, Rotate.Y_AXIS),
+				new Rotate(45, Rotate.X_AXIS),
+				new Rotate(15, Rotate.Z_AXIS));
+		StackPane cubeEnvironment = new StackPane();
+		cubeEnvironment.getChildren().add(cubeRender);
+		
+		// Make the cube spin over time.
+		cubeRender.setRotationAxis(Rotate.Y_AXIS);
+		KeyValue cubeYNoRot = new KeyValue(cubeRender.rotateProperty(), 0);
+		KeyValue cubeYFullRot = new KeyValue(cubeRender.rotateProperty(), -360);
+		Timeline cubeSpinAnimation = new Timeline(
+				new KeyFrame(Duration.millis(0), cubeYNoRot),
+				new KeyFrame(Duration.millis(4000), cubeYFullRot));
+		cubeSpinAnimation.setCycleCount(Timeline.INDEFINITE);
+		cubeSpinAnimation.play();
+		
+		// SubScene for 3D view.
+		SubScene subScene = new SubScene(cubeEnvironment, width, height);
+		camera = new PerspectiveCamera(true);
+		camera.setTranslateZ(-20);
+		subScene.setCamera(camera);
+		cubeEnvironment.getChildren().add(camera);
+		primaryStage.setScene(primaryScene);
+		// Add the 3D subscene to the scene.
+		masterRoot.setRight(subScene);
+		//subScene.setFill(Color.BLUE);
+		// TODO: the rest of the 3d render thing.
 
 		// Define timers.
 		inspectionTimer = new AnimationTimer() {
@@ -209,8 +257,6 @@ public class TimerFX extends Application {
 		primaryStage.setTitle("My cube timer.");
 		updateAverages();
 		primaryStage.show();
-		
-		cube.moveSet(scrambleString);
 	}
 
 	public static void inspect() {
@@ -272,7 +318,7 @@ public class TimerFX extends Application {
 		scrambleString = makeScramble(20);
 		scramble.setText(scrambleString);
 		// Reset the cube.
-		cube = new Cube();
+		cube = new RubiksCube();
 		cube.moveSet(scrambleString);
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);

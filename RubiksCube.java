@@ -3,14 +3,14 @@ package timerfx;
 import java.util.ArrayList;
 import timerfx.cubies.*;
 
-public class Cube {
+public class RubiksCube {
 
 	// The pieces.
 	private Cubie[] pieces;
 
 	private boolean solved;
 
-	public Cube() {
+	public RubiksCube() {
 		this.solved = true;
 		this.pieces = new Cubie[68];
 		int index = 0;
