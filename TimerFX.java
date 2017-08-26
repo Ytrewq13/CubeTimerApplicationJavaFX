@@ -19,6 +19,9 @@ import javafx.util.Duration;
 public class TimerFX extends Application {
 
 	private static boolean debug = false; // For debugging.
+	
+	// Cube.
+	private static Cube cube;
 
 	// Window dimensions.
 	private static int width = 400;
@@ -29,6 +32,9 @@ public class TimerFX extends Application {
 	private static Label averageTime;
 	private static Label listTimes;
 	private static Label scramble;
+	
+	// Scramble.
+	private static String scrambleString;
 	// Time stats components.
 	private static Label worstTimeLabel;
 	private static Label bestTimeLabel;
@@ -68,6 +74,9 @@ public class TimerFX extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
+		// Create the cube.
+		cube = new Cube();
+		
 		BorderPane root = new BorderPane();
 		
 		timeStatsFormattingBox = new BorderPane();
@@ -200,6 +209,8 @@ public class TimerFX extends Application {
 		primaryStage.setTitle("My cube timer.");
 		updateAverages();
 		primaryStage.show();
+		
+		cube.moveSet(scrambleString);
 	}
 
 	public static void inspect() {
@@ -258,7 +269,8 @@ public class TimerFX extends Application {
 		}
 		listTimes.setText(listOfTimes);
 		// Make a scramble.
-		scramble.setText(makeScramble(20));
+		scrambleString = makeScramble(20);
+		scramble.setText(scrambleString);
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);
 		float bestTime = bestTime(1);
