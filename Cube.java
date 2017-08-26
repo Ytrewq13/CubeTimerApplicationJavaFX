@@ -53,7 +53,7 @@ public class Cube {
 					int[] left = {-2, x, y};
 					int[] front = {x, y, 2};
 					int[] back = {x, y, -2};
-					System.out.println(up[0] + "," + up[1] + "," + up[2]);
+					if (TimerFX.debug) {System.out.println(up[0] + "," + up[1] + "," + up[2]);}
 					this.pieces[index] = new ColorCubie("white", up);
 					index++;
 					this.pieces[index] = new ColorCubie("yellow", down);
@@ -69,41 +69,43 @@ public class Cube {
 				}
 			}
 		}
-		this.testCoords();
-		//this.moveSet("l'"); //TODO: test using this line.
+		if (TimerFX.debug) {
+			this.testCoords();
+			System.out.println();
+
+			for (Cubie piece : this.pieces) {
+				String color = piece.getColor();
+				int[] coords = piece.getCoords();
+
+				System.out.print(coords[0] + "," + coords[1] + "," + coords[2] + "  ==>  ");
+				System.out.println(color);
+			}
+			int[] counter = new int[6];
+			for (Cubie piece : this.pieces) {
+				int[] coords = piece.getCoords();
+				if (coords[0] == 2) {
+					counter[0]++;
+				} else if (coords[0] == -2) {
+					counter[1]++;
+				}
+				if (coords[1] == 2) {
+					counter[2]++;
+				} else if (coords[1] == -2) {
+					counter[3]++;
+				}
+				if (coords[2] == 2) {
+					counter[4]++;
+				} else if (coords[2] == -2) {
+					counter[5]++;
+				}
+			}
+			for (int i : counter) {
+				System.out.println(i);
+			}
+		}
 		// I tested every single move and all primes, which are all correct.
 		// Should still test using multiple moves at once.
-		System.out.println();
-		//this.testCoords();
-		for (Cubie piece : this.pieces) {
-			String color = piece.getColor();
-			int[] coords = piece.getCoords();
-
-			System.out.print(coords[0] + "," + coords[1] + "," + coords[2] + "  ==>  ");
-			System.out.println(color);
-		}
-		int[] counter = new int[6];
-		for (Cubie piece : this.pieces) {
-			int[] coords = piece.getCoords();
-			if (coords[0] == 2) {
-				counter[0]++;
-			} else if (coords[0] == -2) {
-				counter[1]++;
-			}
-			if (coords[1] == 2) {
-				counter[2]++;
-			} else if (coords[1] == -2) {
-				counter[3]++;
-			}
-			if (coords[2] == 2) {
-				counter[4]++;
-			} else if (coords[2] == -2) {
-				counter[5]++;
-			}
-		}
-		for (int i : counter) {
-			System.out.println(i);
-		}
+		// I will do that once I have a 3D render of the cube.
 
 	}
 
@@ -131,12 +133,12 @@ public class Cube {
 			moves.add(Character.toString(c));
 		}
 		for (int i = 0; i < moves.size(); i++) {
-			System.out.println(moves.get(i));
+			if (TimerFX.debug) {System.out.println(moves.get(i));}
 			moves.set(i, moves.get(i).toUpperCase());
 		}
 		System.out.println();
 		for (String move : moves) {
-			System.out.println(move);
+			if (TimerFX.debug) {System.out.println(move);}
 			if (!this.rotate(move.charAt(0))) {
 				success = false;
 			}

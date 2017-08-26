@@ -18,7 +18,7 @@ import javafx.util.Duration;
 
 public class TimerFX extends Application {
 
-	private static boolean debug = false; // For debugging.
+	public static boolean debug = false; // For debugging.
 	
 	// Cube.
 	private static Cube cube;
@@ -271,6 +271,9 @@ public class TimerFX extends Application {
 		// Make a scramble.
 		scrambleString = makeScramble(20);
 		scramble.setText(scrambleString);
+		// Reset the cube.
+		cube = new Cube();
+		cube.moveSet(scrambleString);
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);
 		float bestTime = bestTime(1);
@@ -328,7 +331,7 @@ public class TimerFX extends Application {
 			do {
 				index = (int) Math.floor(Math.random() * options.length);
 				if (i > 0) {
-					viable = !(options[index] == faces[faces.length - 1]);
+					viable = !(options[index] == faces[i - 1]);
 				} else {
 					viable = true;
 				}
