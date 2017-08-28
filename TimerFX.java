@@ -41,9 +41,13 @@ public class TimerFX extends Application {
 	
 	// 3D window components/nodes.
 	private static Camera camera;
+	private static Group cubeGroup;
 	
 	// 3D material.
 	private static final PhongMaterial redMaterial = new PhongMaterial(Color.RED);
+	private static final PhongMaterial greenMaterial = new PhongMaterial(Color.GREEN);
+	private static final PhongMaterial blueMaterial = new PhongMaterial(Color.BLUE);
+	private static final PhongMaterial yellowMaterial = new PhongMaterial(Color.YELLOW);
 	
 	// Scramble.
 	private static String scrambleString;
@@ -127,19 +131,38 @@ public class TimerFX extends Application {
 		Scene primaryScene = new Scene(masterRoot, width*2, height);
 		
 		// 3D cube shape.
-		Box cubeRender = new Box(5, 5, 5);
-		cubeRender.setMaterial(redMaterial);
-		cubeRender.getTransforms().addAll(
+		cubeGroup = new Group();
+		Box cubeRender1 = new Box(2, 2, 2);
+		Box cubeRender2 = new Box(2, 2, 2);
+		Box cubeRender3 = new Box(2, 2, 2);
+		Box cubeRender4 = new Box(2, 2, 2);
+		cubeGroup.getChildren().addAll(
+				cubeRender1,
+				cubeRender2,
+				cubeRender3,
+				cubeRender4);
+		cubeRender1.setMaterial(redMaterial);
+		cubeRender2.setMaterial(greenMaterial);
+		cubeRender3.setMaterial(blueMaterial);
+		cubeRender4.setMaterial(yellowMaterial);
+		cubeRender1.setTranslateY(-1);
+		cubeRender2.setTranslateY(1);
+		cubeRender3.setTranslateY(-1);
+		cubeRender3.setTranslateX(2);
+		cubeRender4.setTranslateY(1);
+		cubeRender4.setTranslateX(2);
+		cubeGroup.getTransforms().addAll(
 				new Rotate(45, Rotate.Y_AXIS),
 				new Rotate(45, Rotate.X_AXIS),
 				new Rotate(15, Rotate.Z_AXIS));
+		cubeGroup.setTranslateZ(15);
 		StackPane cubeEnvironment = new StackPane();
-		cubeEnvironment.getChildren().add(cubeRender);
+		cubeEnvironment.getChildren().add(cubeGroup);
 		
 		// Make the cube spin over time.
-		cubeRender.setRotationAxis(Rotate.Y_AXIS);
-		KeyValue cubeYNoRot = new KeyValue(cubeRender.rotateProperty(), 0);
-		KeyValue cubeYFullRot = new KeyValue(cubeRender.rotateProperty(), -360);
+		cubeGroup.setRotationAxis(Rotate.Y_AXIS);
+		KeyValue cubeYNoRot = new KeyValue(cubeGroup.rotateProperty(), 0);
+		KeyValue cubeYFullRot = new KeyValue(cubeGroup.rotateProperty(), -360);
 		Timeline cubeSpinAnimation = new Timeline(
 				new KeyFrame(Duration.millis(0), cubeYNoRot),
 				new KeyFrame(Duration.millis(4000), cubeYFullRot));
@@ -147,15 +170,27 @@ public class TimerFX extends Application {
 		cubeSpinAnimation.play();
 		
 		// SubScene for 3D view.
-		SubScene subScene = new SubScene(cubeEnvironment, width, height);
+		SubScene subScene = new SubScene(cubeEnvironment, width, height, true, SceneAntialiasing.BALANCED);
 		camera = new PerspectiveCamera(true);
-		camera.setTranslateZ(-20);
+		//camera.setTranslateZ(-15); // DO NOT DO THIS.
+		/*
+		* If the camera is moved to a negative z-coordinate,
+		* only objects with a negative z-coordinate will be rendered.
+		*
+		* I think it has something to do with the near clipping plane,
+		* which has a default z-coordinate of 0.01
+		*
+		* Perhaps the coordinate is absolute, and not relative to the
+		* camera.
+		*
+		* In any case, NEVER translate the camera to a negative z-coordinate,
+		* especially not before implementing a depth buffer / depth testing.
+		*/
 		subScene.setCamera(camera);
 		cubeEnvironment.getChildren().add(camera);
 		primaryStage.setScene(primaryScene);
 		// Add the 3D subscene to the scene.
 		masterRoot.setRight(subScene);
-		//subScene.setFill(Color.BLUE);
 		// TODO: the rest of the 3d render thing.
 
 		// Define timers.
@@ -256,6 +291,8 @@ public class TimerFX extends Application {
 
 		primaryStage.setTitle("My cube timer.");
 		updateAverages();
+		primaryStage.setMinWidth(width*2);
+		primaryStage.setMinHeight(height);
 		primaryStage.show();
 	}
 
