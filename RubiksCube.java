@@ -1,6 +1,7 @@
 package timerfx;
 
 import java.util.ArrayList;
+import javafx.scene.paint.PhongMaterial;
 import timerfx.cubies.*;
 
 public class RubiksCube {
@@ -155,26 +156,27 @@ public class RubiksCube {
 		return true;
 	}
 
-	public static int[] transform(int[] coords) {
-		// Multiply by the matrix:
-		//   [0  1]
-		//   [-1 0]
-		int x = coords[0];
-		int y = coords[1];
-		// Multiply by the matrix.
-		int newX = -y;
-		int newY = x;
-		// Form the new coords.
-		int[] newLoc = {newX, newY};
-		// Return the new location.
-		return newLoc;
-	}
-
 	// Method to return boolean of whether the cube is solved or not.
 	public boolean isSolved() {
 		boolean solved = true;
 		//TODO: work out if cube is solved.
-		return true;
+		return solved;
+	}
+	
+	public void updateRender() {
+		for (Cubie piece : this.pieces) {
+			piece.update();
+		}
+	}
+	
+	public PhongMaterial colorAt(int face, int i, int j) {
+		for (Cubie piece : this.pieces) {
+			int[] coords = piece.getRenderCoords();
+			if (coords[0] == face && (2-coords[1]) == i && (2-coords[2]) == j) {
+				return piece.getMaterial();
+			}
+		}
+		return TimerFX.errorMat;
 	}
 
 }

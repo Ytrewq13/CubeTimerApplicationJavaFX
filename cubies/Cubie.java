@@ -1,16 +1,61 @@
 package timerfx.cubies;
 
+import javafx.scene.paint.PhongMaterial;
+
 public abstract class Cubie {
 	// This is the superclass.
 	// Included to show inheritance and polymorphism.
 
 	protected int[] coords;
 	protected String color;
+	protected PhongMaterial material;
+	protected int[] renderCoords = {-1, -1, -1};
 	// To store colors:
 	// I will use 'Color' cubies
 
 	public void moveTo(int[] coords) {
 		this.coords = coords;
+		this.update();
+	}
+	
+	public void update() {
+		// Need to check which face we are and update coords for the cube render.
+		if (this.coords[0] == 2) {
+			// R
+			this.renderCoords[0] = 2;
+			this.renderCoords[1] = this.coords[1] + 1;
+			this.renderCoords[2] = this.coords[2] + 1;
+		} else if (this.coords[0] == -2) {
+			// L
+			this.renderCoords[0] = 3;
+			this.renderCoords[1] = this.coords[1] + 1;
+			this.renderCoords[2] = this.coords[2] + 1;
+		} else if (this.coords[1] == 2) {
+			// U
+			this.renderCoords[0] = 0;
+			this.renderCoords[1] = this.coords[0] + 1;
+			this.renderCoords[2] = this.coords[2] + 1;
+		} else if (this.coords[1] == -2) {
+			// D
+			this.renderCoords[0] = 1;
+			this.renderCoords[1] = this.coords[0] + 1;
+			this.renderCoords[2] = this.coords[2] + 1;
+		} else if (this.coords[2] == 2) {
+			// F
+			this.renderCoords[0] = 4;
+			this.renderCoords[1] = this.coords[0] + 1;
+			this.renderCoords[2] = this.coords[1] + 1;
+		} else if (this.coords[2] == -2) {
+			this.renderCoords[0] = 5;
+			this.renderCoords[1] = this.coords[0] + 1;
+			this.renderCoords[2] = this.coords[1] + 1;
+		} else {
+			this.renderCoords = new int[] {-1, -1, -1};
+		}
+	}
+	
+	public int[] getRenderCoords() {
+		return this.renderCoords;
 	}
 
 	public int[] getCoords() {
@@ -23,6 +68,10 @@ public abstract class Cubie {
 
 	public String getColor() {
 		return this.color;
+	}
+	
+	public PhongMaterial getMaterial() {
+		return this.material;
 	}
 	
 	public int[] getNewCoordsAfterMove(char move) {
@@ -664,6 +713,7 @@ public abstract class Cubie {
 										return new int[] {-1,-1,-1};
 									case 2:
 										// LDF(F) -> LDB(D)
+										return new int[] {-1,-2,-1};
 								}
 							case 0:
 								switch (this.coords[2]) {

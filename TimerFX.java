@@ -43,11 +43,18 @@ public class TimerFX extends Application {
 	private static Camera camera;
 	private static Group cubeGroup;
 	
-	// 3D material.
-	private static final PhongMaterial redMaterial = new PhongMaterial(Color.RED);
-	private static final PhongMaterial greenMaterial = new PhongMaterial(Color.GREEN);
-	private static final PhongMaterial blueMaterial = new PhongMaterial(Color.BLUE);
-	private static final PhongMaterial yellowMaterial = new PhongMaterial(Color.YELLOW);
+	private static Box[][][] stickers;
+	
+	// 3D materials.
+	public static final PhongMaterial blackMat = new PhongMaterial(Color.BLACK);
+	public static final PhongMaterial redMat = new PhongMaterial(Color.RED);
+	public static final PhongMaterial greenMat = new PhongMaterial(Color.GREEN);
+	public static final PhongMaterial blueMat = new PhongMaterial(Color.BLUE);
+	public static final PhongMaterial whiteMat = new PhongMaterial(Color.WHITE);
+	public static final PhongMaterial yellowMat = new PhongMaterial(Color.YELLOW);
+	public static final PhongMaterial orangeMat = new PhongMaterial(Color.ORANGE);
+	
+	public static final PhongMaterial errorMat = new PhongMaterial(Color.MAGENTA);
 	
 	// Scramble.
 	private static String scrambleString;
@@ -132,29 +139,43 @@ public class TimerFX extends Application {
 		
 		// 3D cube shape.
 		cubeGroup = new Group();
-		Box cubeRender1 = new Box(2, 2, 2);
-		Box cubeRender2 = new Box(2, 2, 2);
-		Box cubeRender3 = new Box(2, 2, 2);
-		Box cubeRender4 = new Box(2, 2, 2);
-		cubeGroup.getChildren().addAll(
-				cubeRender1,
-				cubeRender2,
-				cubeRender3,
-				cubeRender4);
-		cubeRender1.setMaterial(redMaterial);
-		cubeRender2.setMaterial(greenMaterial);
-		cubeRender3.setMaterial(blueMaterial);
-		cubeRender4.setMaterial(yellowMaterial);
-		cubeRender1.setTranslateY(-1);
-		cubeRender2.setTranslateY(1);
-		cubeRender3.setTranslateY(-1);
-		cubeRender3.setTranslateX(2);
-		cubeRender4.setTranslateY(1);
-		cubeRender4.setTranslateX(2);
-		cubeGroup.getTransforms().addAll(
-				new Rotate(45, Rotate.Y_AXIS),
-				new Rotate(45, Rotate.X_AXIS),
-				new Rotate(15, Rotate.Z_AXIS));
+		Box blackCube = new Box(2.9, 2.9, 2.9);
+		blackCube.setMaterial(blackMat);
+		cubeGroup.getChildren().add(blackCube);
+		// Create the stickers and arrange them around the cube.
+		stickers = new Box[6][3][3];
+		for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < 3; j++) {
+				for (int k = 0; k < 3; k++) {
+					Box box = new Box(0.95, 0.95, 0.02);
+					if (i == 0 || i == 1) {
+						// U or D.
+						box.getTransforms().add(new Rotate(90, Rotate.X_AXIS));
+						box.setTranslateX((j-1));
+						box.setTranslateY(-(1.5*(2*i-1))); // Translate.
+						box.setTranslateZ((k-1));
+						box.setMaterial((i==0)?whiteMat:yellowMat);
+					} else if (i == 2 || i == 3) {
+						// L or R.
+						box.getTransforms().add(new Rotate(90, Rotate.Y_AXIS));
+						box.setTranslateX((1.5*(2*i-5))); // Translate.
+						box.setTranslateY(-(j-1));
+						box.setTranslateZ((k-1));
+						box.setMaterial((i==2)?redMat:orangeMat);
+					} else {
+						// B or F.
+						// No need to rotate.
+						box.setTranslateX((j-1));
+						box.setTranslateY(-(k-1));
+						box.setTranslateZ((1.5*(2*i-9))); // Translate.
+						box.setMaterial((i==4)?greenMat:blueMat);
+					}
+					stickers[i][j][k] = box;
+					cubeGroup.getChildren().add(box);
+				}
+			}
+		}
+		cubeGroup.getTransforms().addAll(new Rotate(150, Rotate.X_AXIS));
 		cubeGroup.setTranslateZ(15);
 		StackPane cubeEnvironment = new StackPane();
 		cubeEnvironment.getChildren().add(cubeGroup);
@@ -165,7 +186,7 @@ public class TimerFX extends Application {
 		KeyValue cubeYFullRot = new KeyValue(cubeGroup.rotateProperty(), -360);
 		Timeline cubeSpinAnimation = new Timeline(
 				new KeyFrame(Duration.millis(0), cubeYNoRot),
-				new KeyFrame(Duration.millis(4000), cubeYFullRot));
+				new KeyFrame(Duration.millis(12000), cubeYFullRot));
 		cubeSpinAnimation.setCycleCount(Timeline.INDEFINITE);
 		cubeSpinAnimation.play();
 		
@@ -191,7 +212,6 @@ public class TimerFX extends Application {
 		primaryStage.setScene(primaryScene);
 		// Add the 3D subscene to the scene.
 		masterRoot.setRight(subScene);
-		// TODO: the rest of the 3d render thing.
 
 		// Define timers.
 		inspectionTimer = new AnimationTimer() {
@@ -357,6 +377,8 @@ public class TimerFX extends Application {
 		// Reset the cube.
 		cube = new RubiksCube();
 		cube.moveSet(scrambleString);
+		cube.testCoords();
+		updateCubeRender();
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);
 		float bestTime = bestTime(1);
@@ -450,6 +472,39 @@ public class TimerFX extends Application {
 			sum += times.get(i);
 		}
 		return sum / times.size();
+	}
+	
+	public static void updateCubeRender() {
+		cube.updateRender();
+		for (int i = 0; i < stickers.length; i++) {
+			for (int j = 0; j < stickers[0].length; j++) {
+				for (int k = 0; k < stickers[0][0].length; k++) {
+					stickers[i][j][k].setMaterial(cube.colorAt(i,j,k));
+					if (j == 1 && k == 1) {
+						switch(i) {
+							case 0:
+								stickers[i][j][k].setMaterial(whiteMat);
+								break;
+							case 1:
+								stickers[i][j][k].setMaterial(yellowMat);
+								break;
+							case 2:
+								stickers[i][j][k].setMaterial(redMat);
+								break;
+							case 3:
+								stickers[i][j][k].setMaterial(orangeMat);
+								break;
+							case 4:
+								stickers[i][j][k].setMaterial(greenMat);
+								break;
+							default:
+								stickers[i][j][k].setMaterial(blueMat);
+								break;
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public static void main(String[] args) {
