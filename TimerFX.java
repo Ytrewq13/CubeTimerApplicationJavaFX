@@ -377,7 +377,7 @@ public class TimerFX extends Application {
 		// Reset the cube.
 		cube = new RubiksCube();
 		cube.moveSet(scrambleString);
-		cube.testCoords();
+		if (debug) cube.testCoords();
 		updateCubeRender();
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);
@@ -463,6 +463,7 @@ public class TimerFX extends Application {
 					System.out.println("Something went wrong.");
 			}
 		}
+		//scramble = "R  U  R' U' "; // TODO: remove.
 		return scramble;
 	}
 
