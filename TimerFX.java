@@ -94,9 +94,16 @@ public class TimerFX extends Application {
 	private static final int inspectionTime = 15;
 	// Time list length max.
 	private static final int maxTimeListLength = 15;
+	
+	// Database connector.
+	private static DataBaseConnector dbConn;
 
 	@Override
 	public void start(Stage primaryStage) {
+		// Create the database connector.
+		dbConn = new DataBaseConnector();
+		
+		
 		// Create the cube.
 		cube = new RubiksCube();
 		
