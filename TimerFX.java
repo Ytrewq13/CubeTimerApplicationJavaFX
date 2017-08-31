@@ -1,5 +1,6 @@
 package timerfx;
 
+import java.sql.SQLException;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -17,7 +18,10 @@ import javafx.animation.KeyValue;
 import javafx.stage.Stage;
 import javafx.animation.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.util.Duration;
@@ -97,11 +101,21 @@ public class TimerFX extends Application {
 	
 	// Database connector.
 	private static DataBaseConnector dbConn;
+	// Account detail storage.
+	private static HashMap<String, String> accountDetails;
 
 	@Override
 	public void start(Stage primaryStage) {
 		// Create the database connector.
 		dbConn = new DataBaseConnector();
+		try {
+			accountDetails = dbConn.login("ytrewq13","password");
+			if (accountDetails.get("correctPassword").equals("YES")) {
+				System.out.println(accountDetails.get("forename"));
+			}
+		} catch (SQLException ex) {
+			System.out.println(ex);
+		}
 		
 		
 		// Create the cube.

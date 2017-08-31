@@ -3,14 +3,22 @@ package timerfx;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.FileReader;
+import java.io.UnsupportedEncodingException;
+import java.security.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.xml.bind.DatatypeConverter;
 
 public class DataBaseConnector {
 
@@ -27,7 +35,7 @@ public class DataBaseConnector {
 	private String timeTable;
 	private String username;
 	private String password;
-	
+
 	// Database fields.
 	private Connection connection;
 
@@ -35,7 +43,7 @@ public class DataBaseConnector {
 	private ScriptEngineManager factory;
 	private ScriptEngine engine;
 	private FileReader jsonReader;
-	
+
 	// JavaScript code for JavaScripting the JSON.
 	private String javaScript;
 
@@ -50,15 +58,62 @@ public class DataBaseConnector {
 		}
 		try {
 			this.connectDB();
+			//this.disconncetDB();
 		} catch (SQLException ex) {
 			System.out.println(ex);
 		}
 	}
-	
+
+	public HashMap<String, String> login(String username, String password) throws SQLException {
+		Statement stmt = this.connection.createStatement();
+		PreparedStatement passDetails = this.connection.prepareStatement(
+				"SELECT password, salt FROM "
+				+ this.userTable
+				+ " WHERE username=? LIMIT 1;");
+		passDetails.setString(1, username); // Using prepared statements to prevent SQL injection.
+		ResultSet rs = passDetails.executeQuery();
+		rs.next();
+		String saltedPass = password + rs.getString(2);
+		HashMap<String, String> loggedInValues = new HashMap<String, String>();
+		if (this.getSha256Hex(saltedPass, "UTF-8").equals(rs.getString(1))) {
+			/*
+			* Note to self:
+			* In java, NEVER compare Strings using "==" or "!="
+			* Always use "String.equals(String)" instead.
+			*/
+			// Correct password, request username, forname from DB.
+			PreparedStatement loggedInQuery = this.connection.prepareStatement(
+					"SELECT username, forename FROM "
+							+ this.userTable
+							+ " WHERE username=? LIMIT 1;");
+			loggedInQuery.setString(1, username); // Bobby Tables won't get me.
+			rs = loggedInQuery.executeQuery();
+			rs.next();
+			loggedInValues.put("username", rs.getString(1));
+			loggedInValues.put("forename", rs.getString(2));
+			System.out.println("Correct password!");
+			loggedInValues.put("correctPassword", "YES");
+		} else {
+			// Incorrect password.
+			System.out.println("Incorrect password!");
+			loggedInValues.put("correctPassword", "NO");
+		}
+		// Create the hashmap to return.
+		return loggedInValues;
+	}
+
+	private void disconncetDB() {
+		try {
+			this.connection.close();
+		} catch (SQLException ex) {
+			System.out.println(ex);
+		}
+	}
+
 	private void connectDB() throws SQLException {
 		if (TimerFX.debug) {
 			System.out.println("Connecting to database...");
-			
+
 			System.out.println("Using login username: " + this.username);
 			System.out.println("Using login password: " + this.password);
 		}
@@ -93,9 +148,11 @@ public class DataBaseConnector {
 		* ALWAYS print your variables when you run into an issue like this.
 		* It will save you A LOT of time messing about with user creation
 		* in an ssh terminal on the mysql server.
-		*/
+		 */
 		// As long as there was no error, we are now connected to the database.
-		if (TimerFX.debug) System.out.println("Connected to database successfully!");
+		if (TimerFX.debug) {
+			System.out.println("Connected to database successfully!");
+		}
 	}
 
 	private void getDetails(String JSONurl) throws FileNotFoundException, ScriptException, IOException {
@@ -164,5 +221,21 @@ public class DataBaseConnector {
 				+ "Number.prototype.toJava = function() {\n"
 				+ "  return java.lang.Integer(this);\n"
 				+ "};";
+	}
+
+	public String getSha256Hex(String text, String encoding) {
+		String shaHex = "";
+		encoding = (encoding == null)? "UTF-8" : encoding; // This line is probably the issue.
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+			md.update(text.getBytes(encoding));
+			byte[] digest = md.digest();
+
+			shaHex = DatatypeConverter.printHexBinary(digest);
+		} catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+			System.out.println(ex);
+		}
+		return shaHex.toLowerCase();
 	}
 }
