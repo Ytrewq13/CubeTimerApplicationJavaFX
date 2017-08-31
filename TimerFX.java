@@ -651,14 +651,15 @@ public class TimerFX extends Application {
 	}
 	
 	private static void setLoggedInStatusLabel() {
+		String loggedOutText = "You are not logged in. ";
 		if (accountDetails.isEmpty()) {
-			loggedInStatusLabel.setText("You are not logged in.");
+			loggedInStatusLabel.setText(loggedOutText);
 		} else if (accountDetails.get("correctPassword").equals("YES")) {
 			loggedInStatusLabel.setText("Logged in as "
 					+ accountDetails.get("username")
-					+ ".");
+					+ ". ");
 		} else {
-			loggedInStatusLabel.setText("You are not logged in.");
+			loggedInStatusLabel.setText(loggedOutText);
 		}
 	}
 
