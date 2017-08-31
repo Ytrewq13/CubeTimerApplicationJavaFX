@@ -20,16 +20,21 @@ import javafx.animation.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.event.EventType;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
 public class TimerFX extends Application {
 
 	public static boolean debug = false; // For debugging.
-	
+
 	// Cube.
 	private static RubiksCube cube;
 
@@ -42,13 +47,13 @@ public class TimerFX extends Application {
 	private static Label averageTime;
 	private static Label listTimes;
 	private static Label scramble;
-	
+
 	// 3D window components/nodes.
 	private static Camera camera;
 	private static Group cubeGroup;
-	
+
 	private static Box[][][] stickers;
-	
+
 	// 3D materials.
 	public static final PhongMaterial blackMat = new PhongMaterial(Color.BLACK);
 	public static final PhongMaterial redMat = new PhongMaterial(Color.RED);
@@ -57,9 +62,9 @@ public class TimerFX extends Application {
 	public static final PhongMaterial whiteMat = new PhongMaterial(Color.WHITE);
 	public static final PhongMaterial yellowMat = new PhongMaterial(Color.YELLOW);
 	public static final PhongMaterial orangeMat = new PhongMaterial(Color.ORANGE);
-	
+
 	public static final PhongMaterial errorMat = new PhongMaterial(Color.MAGENTA);
-	
+
 	// Scramble.
 	private static String scrambleString;
 	// Time stats components.
@@ -70,11 +75,17 @@ public class TimerFX extends Application {
 	private static Label avg5Label;
 	private static Label avg12Label;
 	private static VBox timeStatsBox;
-	
+
 	// Containers for formatting.
 	private static BorderPane timeStatsFormattingBox;
 	private static BorderPane timeListFormattingBox;
 	private static BorderPane scrambleFormattingBox;
+	private static HBox loginDetailsFormattingBox;
+
+	// Login details components.
+	private static Dialog<Pair<String, String>> loginDialog;
+	private static Button loginButton;
+	private static Label loggedInStatusLabel;
 
 	// Timers.
 	private static AnimationTimer inspectionTimer;
@@ -98,7 +109,7 @@ public class TimerFX extends Application {
 	private static final int inspectionTime = 15;
 	// Time list length max.
 	private static final int maxTimeListLength = 15;
-	
+
 	// Database connector.
 	private static DataBaseConnector dbConn;
 	// Account detail storage.
@@ -106,23 +117,31 @@ public class TimerFX extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
+		accountDetails = new HashMap<String, String>();
 		// Create the database connector.
 		dbConn = new DataBaseConnector();
-		try {
-			accountDetails = dbConn.login("ytrewq13","password");
-			if (accountDetails.get("correctPassword").equals("YES")) {
-				System.out.println(accountDetails.get("forename"));
+
+		// Create the login details box.
+		loginDetailsFormattingBox = new HBox();
+		loginDetailsFormattingBox.setPadding(new Insets(5, 5, 5, 5));
+		loggedInStatusLabel = new Label();
+		setLoggedInStatusLabel();
+		loginButton = new Button("login");
+		loginDetailsFormattingBox.getChildren().addAll(
+				loggedInStatusLabel,
+				loginButton);
+		loginButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				createLoginPrompt();
 			}
-		} catch (SQLException ex) {
-			System.out.println(ex);
-		}
-		
-		
+		});
+
 		// Create the cube.
 		cube = new RubiksCube();
-		
+
 		BorderPane root = new BorderPane();
-		
+
 		timeStatsFormattingBox = new BorderPane();
 		timeListFormattingBox = new BorderPane();
 		scrambleFormattingBox = new BorderPane();
@@ -151,13 +170,14 @@ public class TimerFX extends Application {
 		root.setTop(scrambleFormattingBox);
 		root.setRight(timeListFormattingBox);
 		root.setLeft(timeStatsFormattingBox);
-		
+		root.setBottom(loginDetailsFormattingBox);
+
 		// Master layout.
 		BorderPane masterRoot = new BorderPane();
 		masterRoot.setLeft(root);
 
-		Scene primaryScene = new Scene(masterRoot, width*2, height);
-		
+		Scene primaryScene = new Scene(masterRoot, width * 2, height);
+
 		// 3D cube shape.
 		cubeGroup = new Group();
 		Box blackCube = new Box(2.9, 2.9, 2.9);
@@ -172,24 +192,24 @@ public class TimerFX extends Application {
 					if (i == 0 || i == 1) {
 						// U or D.
 						box.getTransforms().add(new Rotate(90, Rotate.X_AXIS));
-						box.setTranslateX((j-1));
-						box.setTranslateY(-(1.5*(2*i-1))); // Translate.
-						box.setTranslateZ((k-1));
-						box.setMaterial((i==0)?whiteMat:yellowMat);
+						box.setTranslateX((j - 1));
+						box.setTranslateY(-(1.5 * (2 * i - 1))); // Translate.
+						box.setTranslateZ((k - 1));
+						box.setMaterial((i == 0) ? whiteMat : yellowMat);
 					} else if (i == 2 || i == 3) {
 						// L or R.
 						box.getTransforms().add(new Rotate(90, Rotate.Y_AXIS));
-						box.setTranslateX((1.5*(2*i-5))); // Translate.
-						box.setTranslateY(-(j-1));
-						box.setTranslateZ((k-1));
-						box.setMaterial((i==2)?redMat:orangeMat);
+						box.setTranslateX((1.5 * (2 * i - 5))); // Translate.
+						box.setTranslateY(-(j - 1));
+						box.setTranslateZ((k - 1));
+						box.setMaterial((i == 2) ? redMat : orangeMat);
 					} else {
 						// B or F.
 						// No need to rotate.
-						box.setTranslateX((j-1));
-						box.setTranslateY(-(k-1));
-						box.setTranslateZ((1.5*(2*i-9))); // Translate.
-						box.setMaterial((i==4)?greenMat:blueMat);
+						box.setTranslateX((j - 1));
+						box.setTranslateY(-(k - 1));
+						box.setTranslateZ((1.5 * (2 * i - 9))); // Translate.
+						box.setMaterial((i == 4) ? greenMat : blueMat);
 					}
 					stickers[i][j][k] = box;
 					cubeGroup.getChildren().add(box);
@@ -200,7 +220,7 @@ public class TimerFX extends Application {
 		cubeGroup.setTranslateZ(15);
 		StackPane cubeEnvironment = new StackPane();
 		cubeEnvironment.getChildren().add(cubeGroup);
-		
+
 		// Make the cube spin over time.
 		cubeGroup.setRotationAxis(Rotate.Y_AXIS);
 		KeyValue cubeYNoRot = new KeyValue(cubeGroup.rotateProperty(), 0);
@@ -210,7 +230,7 @@ public class TimerFX extends Application {
 				new KeyFrame(Duration.millis(12000), cubeYFullRot));
 		cubeSpinAnimation.setCycleCount(Timeline.INDEFINITE);
 		cubeSpinAnimation.play();
-		
+
 		// SubScene for 3D view.
 		SubScene subScene = new SubScene(cubeEnvironment, width, height, true, SceneAntialiasing.BALANCED);
 		camera = new PerspectiveCamera(true);
@@ -227,7 +247,7 @@ public class TimerFX extends Application {
 		*
 		* In any case, NEVER translate the camera to a negative z-coordinate,
 		* especially not before implementing a depth buffer / depth testing.
-		*/
+		 */
 		subScene.setCamera(camera);
 		cubeEnvironment.getChildren().add(camera);
 		primaryStage.setScene(primaryScene);
@@ -318,7 +338,9 @@ public class TimerFX extends Application {
 			public void handle(KeyEvent ke) {
 				if (ke.getCode() == KeyCode.SPACE) {
 					if (!started) {
-						if (debug) {System.out.println("[[[[STARTING]]]]");}
+						if (debug) {
+							System.out.println("[[[[STARTING]]]]");
+						}
 						startTimer();
 					} else if (inspecting) {
 						inspecting = false;
@@ -332,7 +354,7 @@ public class TimerFX extends Application {
 
 		primaryStage.setTitle("My cube timer.");
 		updateAverages();
-		primaryStage.setMinWidth(width*2);
+		primaryStage.setMinWidth(width * 2);
 		primaryStage.setMinHeight(height);
 		primaryStage.show();
 	}
@@ -398,7 +420,9 @@ public class TimerFX extends Application {
 		// Reset the cube.
 		cube = new RubiksCube();
 		cube.moveSet(scrambleString);
-		if (debug) cube.testCoords();
+		if (debug) {
+			cube.testCoords();
+		}
 		updateCubeRender();
 		// Get the best and worst times.
 		float worstTime = bestTime(-1);
@@ -495,15 +519,15 @@ public class TimerFX extends Application {
 		}
 		return sum / times.size();
 	}
-	
+
 	public static void updateCubeRender() {
 		cube.updateRender();
 		for (int i = 0; i < stickers.length; i++) {
 			for (int j = 0; j < stickers[0].length; j++) {
 				for (int k = 0; k < stickers[0][0].length; k++) {
-					stickers[i][j][k].setMaterial(cube.colorAt(i,j,k));
+					stickers[i][j][k].setMaterial(cube.colorAt(i, j, k));
 					if (j == 1 && k == 1) {
-						switch(i) {
+						switch (i) {
 							case 0:
 								stickers[i][j][k].setMaterial(whiteMat);
 								break;
@@ -526,6 +550,115 @@ public class TimerFX extends Application {
 					}
 				}
 			}
+		}
+	}
+
+	private static void createLoginPrompt() {
+		if (debug) {
+			System.out.println("Creating login dialog");
+		}
+		// Create the custom dialog.
+		loginDialog = new Dialog<>();
+		loginDialog.setTitle("Login Dialog");
+		loginDialog.setHeaderText("Look, a Custom Login Dialog");
+		// Set the button types.
+		ButtonType loginButtonType = new ButtonType("Login", ButtonData.OK_DONE);
+		loginDialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+		// Create the username and password labels and fields.
+		GridPane grid = new GridPane();
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setPadding(new Insets(20, 150, 10, 10));
+
+		TextField username = new TextField();
+		username.setPromptText("Username");
+		PasswordField password = new PasswordField();
+		password.setPromptText("Password");
+
+		grid.add(new Label("Username:"), 0, 0);
+		grid.add(username, 1, 0);
+		grid.add(new Label("Password:"), 0, 1);
+		grid.add(password, 1, 1);
+
+		// Enable/Disable login button depending on whether a username was entered.
+		Node loginButton = loginDialog.getDialogPane().lookupButton(loginButtonType);
+		loginButton.setDisable(true);
+
+		// Do some validation (using the Java 8 lambda syntax).
+		username.textProperty().addListener((observable, oldValue, newValue) -> {
+			loginButton.setDisable(newValue.trim().isEmpty());
+		});
+
+		loginDialog.getDialogPane().setContent(grid);
+
+		// Request focus on the username field by default.
+		Platform.runLater(() -> username.requestFocus());
+
+		// Convert the result to a username-password-pair when the login button is clicked.
+		loginDialog.setResultConverter(dialogButton -> {
+			if (dialogButton == loginButtonType) {
+				return new Pair<>(username.getText(), password.getText());
+			}
+			return null;
+		});
+
+		Optional<Pair<String, String>> result = loginDialog.showAndWait();
+
+		result.ifPresent(usernamePassword -> {
+			if (debug) System.out.println("Username="
+					+ usernamePassword.getKey()
+					+ ", Password="
+					+ usernamePassword.getValue());
+			try {
+				accountDetails = dbConn.login(usernamePassword.getKey(), usernamePassword.getValue());
+				if (accountDetails.get("correctPassword").equals("YES")) {
+					loggedIn();
+				}
+			} catch (SQLException ex) {
+				System.out.println(ex);
+			}
+		});
+
+		loginDialog.setWidth(width);
+		loginDialog.setHeight(height);
+		loginDialog.setResizable(false);
+		loginDialog.show();
+	}
+	
+	private static void loggedIn() {
+		loginButton.setText("logout");
+		loginButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				accountDetails.clear(); // "Log out".
+				loggedOut();
+			}
+			
+		});
+		setLoggedInStatusLabel();
+	}
+	
+	private static void loggedOut() {
+		loginButton.setText("login");
+		loginButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				createLoginPrompt();
+			}
+		});
+		setLoggedInStatusLabel();
+	}
+	
+	private static void setLoggedInStatusLabel() {
+		if (accountDetails.isEmpty()) {
+			loggedInStatusLabel.setText("You are not logged in.");
+		} else if (accountDetails.get("correctPassword").equals("YES")) {
+			loggedInStatusLabel.setText("Logged in as "
+					+ accountDetails.get("username")
+					+ ".");
+		} else {
+			loggedInStatusLabel.setText("You are not logged in.");
 		}
 	}
 
