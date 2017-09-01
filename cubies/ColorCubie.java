@@ -8,22 +8,22 @@ public class ColorCubie extends Cubie {
 		this.color = col;
 		switch (this.color) {
 			case "white":
-				this.material = TimerFX.whiteMat;
+				this.material = TimerFX.materialUp;
 				break;
 			case "yellow":
-				this.material = TimerFX.yellowMat;
+				this.material = TimerFX.materialDown;
 				break;
 			case "red":
-				this.material = TimerFX.redMat;
+				this.material = TimerFX.materialRight;
 				break;
 			case "orange":
-				this.material = TimerFX.orangeMat;
+				this.material = TimerFX.materialLeft;
 				break;
 			case "green":
-				this.material = TimerFX.greenMat;
+				this.material = TimerFX.materialFront;
 				break;
 			case "blue":
-				this.material = TimerFX.blueMat;
+				this.material = TimerFX.materialBack;
 				break;
 			default:
 				// Something has gone horribly wrong.
