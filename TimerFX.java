@@ -44,10 +44,6 @@ public class TimerFX extends Application {
 
 	// JavaFX components handling object.
 	public static LayoutHandler layoutHandler;
-//	// JavaFX components.
-//	public static Label currentTime;
-//	private static Label listTimes;
-//	private static Label scramble;
 
 	// 3D window components/nodes handling object.
 	public static CubeRenderer cubeRenderer;
@@ -65,12 +61,6 @@ public class TimerFX extends Application {
 
 	// Scramble handling object.
 	private static ScrambleHandler scrambler;
-
-	// Containers for formatting.
-//	private static BorderPane timeStatsFormattingBox;
-//	private static BorderPane timeListFormattingBox;
-//	private static BorderPane scrambleFormattingBox;
-//	private static HBox loginDetailsFormattingBox;
 
 	// Login details components.
 	private static Dialog<Pair<String, String>> loginDialog;
@@ -94,10 +84,8 @@ public class TimerFX extends Application {
 	public static List<Float> times = new ArrayList<Float>();
 	public static List<Long> timestamps = new ArrayList<Long>();
 
-	// Inspection length.
-//	private static final int inspectionTime = 15;
 	// Time list length max.
-	private static final int maxTimeListLength = 15;
+	private static final int MAXTIMELISTLENGTH = 15;
 
 	// Database connector.
 	public static DataBaseConnector dbConn;
@@ -111,11 +99,11 @@ public class TimerFX extends Application {
 		dbConn = new DataBaseConnector();
 		// Create the cube.
 		cube = new RubiksCube();
-//		// 3D cube shape.
+		// 3D cube shape.
 		cubeRenderer = new CubeRenderer(width, height);
 		// Create the layout handler.
 		layoutHandler = new LayoutHandler(width, height, primaryStage);
-//		// Define timers.
+		// Define timers.
 		timerHandler = new TimerHandler();
 		// Define the scramble generator.
 		scrambler = new ScrambleHandler();
@@ -168,7 +156,6 @@ public class TimerFX extends Application {
 	}
 
 	public static void inspect() {
-//		inspectionTimer.start();
 		timerHandler.startInspecting();
 	}
 
@@ -187,9 +174,7 @@ public class TimerFX extends Application {
 				if (debug) {
 					System.out.println("----INSPECTING----");
 				}
-//				inspectionTimer.stop();
 				timerHandler.stopInspecting();
-//				timer.start();
 				timerHandler.startTiming();
 				started = true;
 				inspecting = false;
@@ -209,7 +194,6 @@ public class TimerFX extends Application {
 				System.out.println("++++NOT ENDING++++");
 			}
 			ending = true;
-//			timer.stop();
 			timerHandler.stopTiming();
 			updateAverages();
 		}
@@ -221,7 +205,7 @@ public class TimerFX extends Application {
 		}
 		// Update the list of times.
 		String listOfTimes = "";
-		int timesToShow = (times.size() < maxTimeListLength) ? times.size() : maxTimeListLength;
+		int timesToShow = (times.size() < MAXTIMELISTLENGTH) ? times.size() : MAXTIMELISTLENGTH;
 		for (int i = 1; i <= timesToShow; i++) {
 			listOfTimes += Float.toString(times.get(times.size() - i)) + "\n";
 		}
@@ -255,7 +239,6 @@ public class TimerFX extends Application {
 				sum += times.get(times.size() - i);
 			}
 			float avg5 = sum / 5;
-//			avg5Label.setText("Avg5: " + avg5);
 			layoutHandler.setAvg5Text("Avg5: " + avg5);
 			if (times.size() >= 12) {
 				// Enough times for an avg12.
@@ -264,7 +247,6 @@ public class TimerFX extends Application {
 					sum += times.get(times.size() - i);
 				}
 				float avg12 = sum / 12;
-//				avg12Label.setText("Avg12: " + avg12);
 				layoutHandler.setAvg12Text("Avg12: " + avg12);
 			}
 		}
@@ -293,111 +275,6 @@ public class TimerFX extends Application {
 		}
 		return sum / times.size();
 	}
-
-//	private static void createLoginPrompt() {
-//		if (debug) {
-//			System.out.println("Creating login dialog");
-//		}
-//		// Create the custom dialog.
-//		loginDialog = new Dialog<>();
-//		loginDialog.setTitle("Login Dialog");
-//		loginDialog.setHeaderText("Look, a Custom Login Dialog");
-//		// Set the button types.
-//		ButtonType loginButtonType = new ButtonType("Login", ButtonData.OK_DONE);
-//		loginDialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
-//
-//		// Create the username and password labels and fields.
-//		GridPane grid = new GridPane();
-//		grid.setHgap(10);
-//		grid.setVgap(10);
-//		grid.setPadding(new Insets(20, 150, 10, 10));
-//
-//		TextField username = new TextField();
-//		username.setPromptText("Username");
-//		PasswordField password = new PasswordField();
-//		password.setPromptText("Password");
-//
-//		grid.add(new Label("Username:"), 0, 0);
-//		grid.add(username, 1, 0);
-//		grid.add(new Label("Password:"), 0, 1);
-//		grid.add(password, 1, 1);
-//
-//		// Enable/Disable login button depending on whether a username was entered.
-//		Node loginButton = loginDialog.getDialogPane().lookupButton(loginButtonType);
-//		loginButton.setDisable(true);
-//
-//		// Do some validation (using the Java 8 lambda syntax).
-//		username.textProperty().addListener((observable, oldValue, newValue) -> {
-//			loginButton.setDisable(newValue.trim().isEmpty());
-//		});
-//
-//		loginDialog.getDialogPane().setContent(grid);
-//
-//		// Request focus on the username field by default.
-//		Platform.runLater(() -> username.requestFocus());
-//
-//		// Convert the result to a username-password-pair when the login button is clicked.
-//		loginDialog.setResultConverter(dialogButton -> {
-//			if (dialogButton == loginButtonType) {
-//				return new Pair<>(username.getText(), password.getText());
-//			}
-//			return null;
-//		});
-//
-//		Optional<Pair<String, String>> result = loginDialog.showAndWait();
-//
-//		result.ifPresent(usernamePassword -> {
-//			if (debug) System.out.println("Username="
-//					+ usernamePassword.getKey()
-//					+ ", Password="
-//					+ usernamePassword.getValue());
-//			try {
-//				accountDetails = dbConn.login(usernamePassword.getKey(), usernamePassword.getValue());
-//				if (accountDetails.get("correctPassword").equals("YES")) {
-//					loggedIn();
-//				}
-//			} catch (SQLException ex) {
-//				System.out.println(ex);
-//			}
-//		});
-//	}
-//	
-//	private static void loggedIn() {
-//		loginButton.setText("logout");
-//		loginButton.setOnAction(new EventHandler<ActionEvent>() {
-//			@Override
-//			public void handle(ActionEvent e) {
-//				accountDetails.clear(); // "Log out".
-//				loggedOut();
-//			}
-//			
-//		});
-//		setLoggedInStatusLabel();
-//	}
-//	
-//	private static void loggedOut() {
-//		loginButton.setText("login");
-//		loginButton.setOnAction(new EventHandler<ActionEvent>() {
-//			@Override
-//			public void handle(ActionEvent e) {
-//				createLoginPrompt();
-//			}
-//		});
-//		setLoggedInStatusLabel();
-//	}
-//	
-//	private static void setLoggedInStatusLabel() {
-//		String loggedOutText = "You are not logged in. ";
-//		if (accountDetails.isEmpty()) {
-//			loggedInStatusLabel.setText(loggedOutText);
-//		} else if (accountDetails.get("correctPassword").equals("YES")) {
-//			loggedInStatusLabel.setText("Logged in as "
-//					+ accountDetails.get("username")
-//					+ ". ");
-//		} else {
-//			loggedInStatusLabel.setText(loggedOutText);
-//		}
-//	}
 
 	public static void main(String[] args) {
 		launch();
