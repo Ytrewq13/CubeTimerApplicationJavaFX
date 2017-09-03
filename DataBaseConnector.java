@@ -117,7 +117,7 @@ public class DataBaseConnector {
 			System.out.println("Using login username: " + this.username);
 			System.out.println("Using login password: " + this.password);
 		}
-		String ip = this.lanIP;
+		String ip = (TimerFX.useWANConnections) ? this.wanIP : this.lanIP;
 		// Connect to the database.
 		this.connection = DriverManager.getConnection(
 				"jdbc:"
@@ -136,7 +136,7 @@ public class DataBaseConnector {
 		* I had an issue for ages which I couldn't figure out.
 		* The Exception I was getting looked like I wasn't sending
 		* a password to the database.
-		* Eventually I tried just changing "this.password" to "password",
+		* Eventually I tried just changing this.password to "password",
 		* which was the password at the time. This made the error go away
 		* and the system connected to the database successfully.
 		*
