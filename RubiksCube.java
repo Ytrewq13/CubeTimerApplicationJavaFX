@@ -107,6 +107,8 @@ public class RubiksCube {
 		// I tested every single move and all primes, which are all correct.
 		// Should still test using multiple moves at once.
 		// I will do that once I have a 3D render of the cube.
+		// Update: did that and fount a couple of issues which are now fixed.
+		// The move application algorithm is flawless as of 2018-04-08.		
 
 	}
 
@@ -160,16 +162,20 @@ public class RubiksCube {
 	public boolean isSolved() {
 		boolean solved = true;
 		//TODO: work out if cube is solved.
+		// Update: This is not yet needed so I'll just leave it here and forget
+		// all about it. 2018-04-08.
 		return solved;
 	}
 	
 	public void updateRender() {
 		for (Cubie piece : this.pieces) {
+			// For each piece of the cube update the cube render.			
 			piece.update();
 		}
 	}
 	
 	public PhongMaterial colorAt(int face, int i, int j) {
+		// A method to get the PhongMaterial of the piece at a given coordinate.
 		for (Cubie piece : this.pieces) {
 			int[] coords = piece.getRenderCoords();
 			if (coords[0] == face && (2-coords[1]) == i && (2-coords[2]) == j) {

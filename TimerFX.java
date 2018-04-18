@@ -33,7 +33,7 @@ import javafx.util.Pair;
 
 public class TimerFX extends Application {
 
-	public static boolean useWANConnections = false; // For developing away from home.
+	public static boolean useWANConnections = true; // For developing away from home.
 	public static boolean debug = false; // For debugging.
 
 	// Cube.
